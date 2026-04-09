@@ -1,42 +1,25 @@
 # Macau Trip Map
 
-An interactive map itinerary for a 12-person group trip to Macau.
+This document merges the original Macau Trip Map content with insights from the HKUST Sports Climbing Team's 2-day trip context.
 
-## Features
+## Overview
+Macau is not only known for its rich Portuguese heritage but also offers exciting opportunities for sports and outdoor activities.
 
-- **Interactive Leaflet map** centred on Macau, powered by free CartoDB tiles (no API key required).
-- **Tiered location markers** — colour-coded by priority:
-  - 🟢 **Green** (Tier 1 – highest priority): accommodation & activity venues
-  - 🟠 **Orange** (Tier 2): notable attractions
-  - 🔵 **Blue** (Tier 3): additional points of interest (labels hidden until zoom ≥ 14 or on hover)
-- **Sidebar itinerary list** — click any item to fly the map to that location and open its info popup.
-- Fully **responsive layout** — stacks vertically on mobile, side-by-side on larger screens.
+The HKUST Sports Climbing Team embarked on a thrilling 2-day trip, focusing on both climbing challenges and cultural exploration.
 
-## Locations
+### Day 1: Climbing and Exploration
+- Arrival and brief on climbing locations.
+- Climbing at famous local spots.
+- Evening culture walk in the historic center.
 
-| # | Name | Chinese | Tier |
-|---|------|---------|------|
-| 1 | Riviera Hotel Macau | 濠璟酒店 | 1 |
-| 2 | Solution Climbing Gym | — | 1 |
-| 3 | Complexo Desportivo da UM | 澳門大學綜合體育館（N8） | 1 |
-| 4 | The Parisian Macao | 澳門巴黎人 | 2 |
-| 5 | Senado Square | 議事亭前地 | 3 |
-| 6 | Ruins of Saint Paul's | 大三巴牌坊 | 3 |
+### Day 2: Adventure and Leisure
+- Team building exercises at climbing venues.
+- Visit to select landmarks.
+- Final climbing challenges and wrap-up.
 
-## Usage
+## Dependencies
+- Climbing gear: ropes, harnesses, helmets, etc.
+- Accommodation bookings.
+- Permissions for climbing areas.
 
-Open `index.html` directly in any modern web browser — no build step or server required.
-
-```bash
-open index.html   # macOS
-xdg-open index.html   # Linux
-start index.html  # Windows
-```
-
-## Dependencies (CDN)
-
-| Library | Version | Purpose |
-|---------|---------|---------|
-| [Tailwind CSS](https://tailwindcss.com/) | latest | Utility-first styling |
-| [Leaflet](https://leafletjs.com/) | 1.9.4 | Interactive map |
-| [CartoDB Basemaps](https://carto.com/basemaps/) | — | Map tiles (free, no key) |
+For more details and visual documentation, visit our GitHub Pages URL: [Macau Trip](https://tototofu123.github.io/macau-trip/)
