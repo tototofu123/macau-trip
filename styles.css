@@ -447,6 +447,11 @@ button,
     transform: translateX(0);
 }
 
+.marker-wrap--always-label .marker-label {
+    opacity: 1;
+    transform: translateX(0);
+}
+
 .leaflet-marker-icon:hover {
     z-index: 1000 !important;
 }

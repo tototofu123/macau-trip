@@ -70,11 +70,12 @@ function escapeHtml(value) {
 function createMarkerIcon(location) {
     const priority = priorityMeta[location.priority] || priorityMeta[3];
     const label = location.nameChinese ? `${location.nameEnglish} / ${location.nameChinese}` : location.nameEnglish;
+    const alwaysShowLabelClass = location.priority <= 2 ? 'marker-wrap--always-label' : '';
 
     return L.divIcon({
         className: 'custom-marker',
         html: `
-            <div class="marker-wrap" data-marker-id="${location.id}">
+            <div class="marker-wrap ${alwaysShowLabelClass}" data-marker-id="${location.id}">
                 <svg class="marker-pin ${priority.markerClass}" viewBox="0 0 24 32" aria-hidden="true">
                     <path fill="currentColor" d="M12 0C5.373 0 0 5.373 0 12C0 21 12 32 12 32C12 32 24 21 24 12C24 5.373 18.627 0 12 0ZM12 16C9.791 16 8 14.209 8 12C8 9.791 9.791 8 12 8C14.209 8 16 9.791 16 12C16 14.209 14.209 16 12 16Z"/>
                 </svg>
