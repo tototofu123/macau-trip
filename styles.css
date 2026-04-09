@@ -498,6 +498,10 @@ button,
     display: none;
 }
 
+.sidebar__grabber {
+    display: none;
+}
+
 @media (max-width: 980px) {
     .app-shell {
         grid-template-columns: 1fr;
@@ -515,6 +519,28 @@ button,
         max-height: min(78vh, 700px);
         border-radius: 24px;
         transition: transform 280ms ease, opacity 220ms ease;
+        transform: translateY(0);
+    }
+
+    .sidebar__grabber {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        padding: 4px 0 10px;
+        margin: -2px 0 2px;
+        border: 0;
+        background: transparent;
+        cursor: ns-resize;
+        touch-action: none;
+    }
+
+    .sidebar__grabber-bar {
+        width: 52px;
+        height: 6px;
+        border-radius: 999px;
+        background: rgba(201, 214, 236, 0.58);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
     }
 
     .map-panel {
@@ -571,6 +597,10 @@ button,
         opacity: 0.98;
     }
 
+    body.sidebar-dragging .sidebar {
+        transition: none;
+    }
+
     body.sidebar-collapsed .mobile-sidebar-backdrop {
         opacity: 0;
         pointer-events: none;
@@ -602,6 +632,11 @@ button,
         bottom: 8px;
         padding: 14px;
         max-height: min(82vh, 720px);
+    }
+
+    .sidebar__grabber {
+        padding-top: 2px;
+        padding-bottom: 8px;
     }
 
     .sidebar__header {

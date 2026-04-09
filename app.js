@@ -33,11 +33,14 @@ const listContainer = document.getElementById('location-list');
 const selectedLocation = document.getElementById('selected-location');
 const locationCount = document.getElementById('location-count');
 const sidebar = document.getElementById('sidebar');
+const sidebarGrabber = document.getElementById('sidebar-grabber');
 const mobileSidebarToggle = document.getElementById('mobile-sidebar-toggle');
 const mobileSidebarBackdrop = document.getElementById('mobile-sidebar-backdrop');
 const markers = new Map();
 const cards = new Map();
 const mobileMedia = window.matchMedia('(max-width: 980px)');
+const sheetPeekHeight = 78;
+let dragState = null;
 
 function isMobileLayout() {
     return mobileMedia.matches;
@@ -46,16 +49,67 @@ function isMobileLayout() {
 function setSidebarCollapsed(collapsed) {
     if (!isMobileLayout()) {
         document.body.classList.remove('sidebar-collapsed');
+        document.body.classList.remove('sidebar-dragging');
+        sidebar?.style.removeProperty('transform');
         mobileSidebarToggle?.setAttribute('aria-expanded', 'true');
         return;
     }
 
     document.body.classList.toggle('sidebar-collapsed', collapsed);
+    document.body.classList.remove('sidebar-dragging');
+    sidebar?.style.removeProperty('transform');
     mobileSidebarToggle?.setAttribute('aria-expanded', String(!collapsed));
 }
 
 function syncSidebarMode() {
     setSidebarCollapsed(isMobileLayout());
+}
+
+function getCollapsedOffset() {
+    if (!sidebar) {
+        return 0;
+    }
+
+    return Math.max(0, sidebar.offsetHeight - sheetPeekHeight);
+}
+
+function startSidebarDrag(clientY) {
+    if (!isMobileLayout() || !sidebar || dragState) {
+        return;
+    }
+
+    const isCollapsed = document.body.classList.contains('sidebar-collapsed');
+    const maxOffset = getCollapsedOffset();
+    dragState = {
+        startY: clientY,
+        startOffset: isCollapsed ? maxOffset : 0,
+        maxOffset
+    };
+
+    document.body.classList.add('sidebar-dragging');
+    sidebar.style.transform = `translateY(${dragState.startOffset}px)`;
+}
+
+function moveSidebarDrag(clientY) {
+    if (!dragState || !sidebar) {
+        return;
+    }
+
+    const deltaY = clientY - dragState.startY;
+    const nextOffset = Math.min(dragState.maxOffset, Math.max(0, dragState.startOffset + deltaY));
+    sidebar.style.transform = `translateY(${nextOffset}px)`;
+    dragState.currentOffset = nextOffset;
+}
+
+function endSidebarDrag() {
+    if (!dragState) {
+        return;
+    }
+
+    const finalOffset = dragState.currentOffset ?? dragState.startOffset;
+    const shouldCollapse = finalOffset > dragState.maxOffset * 0.45;
+    dragState = null;
+    setSidebarCollapsed(shouldCollapse);
 }
 
 function escapeHtml(value) {
@@ -198,6 +252,23 @@ async function init() {
 
         mobileSidebarBackdrop?.addEventListener('click', () => {
             setSidebarCollapsed(true);
+        });
+
+        sidebarGrabber?.addEventListener('pointerdown', (event) => {
+            startSidebarDrag(event.clientY);
+            sidebarGrabber.setPointerCapture(event.pointerId);
+        });
+
+        sidebarGrabber?.addEventListener('pointermove', (event) => {
+            moveSidebarDrag(event.clientY);
+        });
+
+        sidebarGrabber?.addEventListener('pointerup', () => {
+            endSidebarDrag();
+        });
+
+        sidebarGrabber?.addEventListener('pointercancel', () => {
+            endSidebarDrag();
         });
 
         mobileMedia.addEventListener('change', () => {
