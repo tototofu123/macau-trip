@@ -32,8 +32,31 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r
 const listContainer = document.getElementById('location-list');
 const selectedLocation = document.getElementById('selected-location');
 const locationCount = document.getElementById('location-count');
+const sidebar = document.getElementById('sidebar');
+const mobileSidebarToggle = document.getElementById('mobile-sidebar-toggle');
+const mobileSidebarBackdrop = document.getElementById('mobile-sidebar-backdrop');
 const markers = new Map();
 const cards = new Map();
+const mobileMedia = window.matchMedia('(max-width: 980px)');
+
+function isMobileLayout() {
+    return mobileMedia.matches;
+}
+
+function setSidebarCollapsed(collapsed) {
+    if (!isMobileLayout()) {
+        document.body.classList.remove('sidebar-collapsed');
+        mobileSidebarToggle?.setAttribute('aria-expanded', 'true');
+        return;
+    }
+
+    document.body.classList.toggle('sidebar-collapsed', collapsed);
+    mobileSidebarToggle?.setAttribute('aria-expanded', String(!collapsed));
+}
+
+function syncSidebarMode() {
+    setSidebarCollapsed(isMobileLayout());
+}
 
 function escapeHtml(value) {
     return String(value)
@@ -132,6 +155,10 @@ function setActiveLocation(location, { openPopup = false, moveMap = true } = {})
             markers.get(location.id)?.openPopup();
         }, 450);
     }
+
+    if (isMobileLayout()) {
+        setSidebarCollapsed(true);
+    }
 }
 
 function createLocationCard(location) {
@@ -161,6 +188,22 @@ function createLocationCard(location) {
 
 async function init() {
     try {
+        syncSidebarMode();
+
+        mobileSidebarToggle?.addEventListener('click', () => {
+            setSidebarCollapsed(false);
+            sidebar?.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        mobileSidebarBackdrop?.addEventListener('click', () => {
+            setSidebarCollapsed(true);
+        });
+
+        mobileMedia.addEventListener('change', () => {
+            syncSidebarMode();
+            map.invalidateSize();
+        });
+
         const response = await fetch('./locations.json');
         if (!response.ok) {
             throw new Error(`Failed to load locations: ${response.status}`);
@@ -192,6 +235,10 @@ async function init() {
         if (locations.length > 0) {
             setActiveLocation(locations[0], { openPopup: false, moveMap: false });
         }
+
+        window.requestAnimationFrame(() => {
+            map.invalidateSize();
+        });
 
         window.addEventListener('resize', () => {
             map.invalidateSize();

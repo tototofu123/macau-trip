@@ -14,7 +14,7 @@
 </head>
 <body>
     <main class="app-shell">
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar" aria-label="Trip sidebar">
             <header class="sidebar__header">
                 <div>
                     <p class="eyebrow">Macau Trip</p>
@@ -85,6 +85,25 @@
         <section class="map-panel" aria-label="Map of Macau trip locations">
             <div id="map" class="map-panel__map"></div>
         </section>
+
+        <button
+            id="mobile-sidebar-toggle"
+            class="mobile-sidebar-toggle"
+            type="button"
+            aria-controls="sidebar"
+            aria-expanded="false"
+            aria-label="Open places list"
+        >
+            Places
+        </button>
+
+        <button
+            id="mobile-sidebar-backdrop"
+            class="mobile-sidebar-backdrop"
+            type="button"
+            aria-label="Close places list"
+            tabindex="-1"
+        ></button>
     </main>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
