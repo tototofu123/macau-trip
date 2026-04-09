@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Macau Trip Map</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Leaflet CSS for the map -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+
+    <style>
+        /* Custom scrollbar for the sidebar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+        
+        /* Ensure map stays behind the popup controls but above background */
+        #map {
+            z-index: 10;
+        }
+        
+        /* Custom map marker overrides to prevent default white box */
+        .custom-marker {
+            background: transparent;
+            border: none;
+        }
+        
+        /* Ensure hovered markers come to the very top so they aren't blocked */
+        .custom-marker:hover {
+            z-index: 1000 !important;
+        }
+
+        /* Tier 3 Label Logic: Hidden by default, visible on hover or when zoomed in */
+        .tier-3-label {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .group:hover .tier-3-label {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .zoomed-in .tier-3-label {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex flex-col md:flex-row h-screen font-sans overflow-hidden">
+
+    <!-- Sidebar / Itinerary List -->
+    <div class="w-full md:w-1/3 lg:w-1/4 bg-white shadow-xl z-20 flex flex-col h-[40vh] md:h-full">
+        <div class="p-6 bg-blue-600 text-white shadow-md">
+            <h1 class="text-2xl font-bold">Macau Trip</h1>
+            <p class="text-sm text-blue-100 mt-1">12-Person Group Itinerary</p>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto p-4 space-y-3" id="location-list">
+            <!-- List items will be injected here by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Map Container -->
+    <div class="w-full md:w-2/3 lg:w-3/4 h-[60vh] md:h-full relative">
+        <div id="map" class="w-full h-full"></div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+
+    <script>
+        // 1. Define the locations with priorities/tiers
+        const locations = [
+            { 
+                id: 1,
+                name: "Riviera Hotel Macau", 
+                chineseName: "濠璟酒店",
+                lat: 22.1852, 
+                lng: 113.5333, 
+                desc: "Your accommodation for the 12-person group.",
+                tier: 1 // Highest Priority
+            },
+            { 
+                id: 2,
+                name: "Solution Climbing Gym", 
+                chineseName: "",
+                lat: 22.2104, 
+                lng: 113.5556, 
+                desc: "Indoor rock climbing facility.",
+                tier: 1 // Highest Priority
+            },
+            { 
+                id: 3,
+                name: "Complexo Desportivo da UM", 
+                chineseName: "澳門大學綜合體育館（N8）",
+                lat: 22.1337, 
+                lng: 113.5429, 
+                desc: "University of Macau sports complex on Hengqin Island.",
+                tier: 1 // Highest Priority
+            },
+            { 
+                id: 4,
+                name: "The Parisian Macao", 
+                chineseName: "澳門巴黎人",
+                lat: 22.1436, 
+                lng: 113.5621, 
+                desc: "Luxury resort featuring a half-scale replica of the Eiffel Tower.",
+                tier: 2 // Secondary Priority
+            },
+            { 
+                id: 5,
+                name: "Senado Square", 
+                chineseName: "議事亭前地",
+                lat: 22.1936, 
+                lng: 113.5397, 
+                desc: "Paved town square and part of the UNESCO Historic Centre of Macau.",
+                tier: 3 // Third Priority
+            },
+            { 
+                id: 6,
+                name: "Ruins of Saint Paul's", 
+                chineseName: "大三巴牌坊",
+                lat: 22.1977, 
+                lng: 113.5409, 
+                desc: "Iconic ruins of a 17th-century Catholic religious complex.",
+                tier: 3 // Third Priority
+            }
+        ];
+
+        // 2. Initialize the Map
+        // Center the map roughly in the middle of Macau
+        const map = L.map('map').setView([22.1700, 113.5500], 13);
+
+        // Add CartoDB tiles (Free, No API Key needed, permissive CORS/Referer)
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        }).addTo(map);
+
+        // Store markers to access them when clicking the sidebar
+        const markers = {};
+
+        // 3. Populate Map and Sidebar
+        const listContainer = document.getElementById('location-list');
+
+        locations.forEach((loc) => {
+            // Determine styling based on tier
+            let pinColorClass = loc.tier === 1 ? 'text-green-600' : (loc.tier === 2 ? 'text-orange-500' : 'text-blue-500');
+            let badgeColorClass = loc.tier === 1 ? 'bg-green-600' : (loc.tier === 2 ? 'bg-orange-500' : 'bg-blue-500');
+            let labelVisibilityClass = (loc.tier === 1 || loc.tier === 2) ? 'opacity-100 pointer-events-auto shadow-md' : 'tier-3-label shadow-sm';
+
+            // Create custom HTML marker combining pin and label
+            const iconHtml = `
+                <div class="group flex items-center w-max cursor-pointer" style="transform: translate(-12px, -32px);">
+                    <!-- Map Pin SVG -->
+                    <div class="${pinColorClass} drop-shadow-md z-20 hover:scale-110 transition-transform">
+                        <svg width="24" height="32" viewBox="0 0 24 32" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 0C5.373 0 0 5.373 0 12C0 21 12 32 12 32C12 32 24 21 24 12C24 5.373 18.627 0 12 0ZM12 16C9.791 16 8 14.209 8 12C8 9.791 9.791 8 12 8C14.209 8 16 9.791 16 12C16 14.209 14.209 16 12 16Z"/>
+                        </svg>
+                    </div>
+                    <!-- Label -->
+                    <div class="ml-1 px-2 py-0.5 bg-white bg-opacity-95 border border-gray-200 rounded text-sm font-bold text-gray-800 z-30 transition-opacity duration-200 ${labelVisibilityClass}">
+                        ${loc.name}
+                    </div>
+                </div>
+            `;
+
+            // Setup the Leaflet custom divIcon
+            const customIcon = L.divIcon({
+                className: 'custom-marker',
+                html: iconHtml,
+                iconSize: [0, 0], // Sizing controlled by the inner HTML/transform
+                iconAnchor: [0, 0],
+                popupAnchor: [0, -32] // Open popup above the pin tip
+            });
+
+            // Add Marker
+            const marker = L.marker([loc.lat, loc.lng], { icon: customIcon }).addTo(map);
+            
+            // Add popup to marker
+            const popupContent = `
+                <div class="font-sans">
+                    <h3 class="font-bold text-lg text-gray-800">${loc.id}. ${loc.name}</h3>
+                    <h4 class="text-sm text-gray-600 mb-2">${loc.chineseName}</h4>
+                    <p class="text-sm">${loc.desc}</p>
+                </div>
+            `;
+            marker.bindPopup(popupContent);
+            markers[loc.id] = marker;
+
+            // Create sidebar list item
+            const listItem = document.createElement('div');
+            listItem.className = "p-3 border border-gray-100 rounded-lg bg-gray-50 hover:bg-gray-100 hover:border-gray-300 transition-colors cursor-pointer group";
+            listItem.innerHTML = `
+                <div class="flex items-start">
+                    <div class="${badgeColorClass} text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mt-1 shrink-0 shadow-sm">
+                        ${loc.id}
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="font-semibold text-gray-800 group-hover:text-blue-700">${loc.name}</h3>
+                        ${loc.chineseName ? `<p class="text-xs text-gray-500">${loc.chineseName}</p>` : ''}
+                    </div>
+                </div>
+            `;
+
+            // Add click event to pan to marker and open popup
+            listItem.addEventListener('click', () => {
+                // Fly to the location
+                map.flyTo([loc.lat, loc.lng], 16, {
+                    animate: true,
+                    duration: 1.5
+                });
+                
+                // Open the popup after a short delay to allow map to move
+                setTimeout(() => {
+                    markers[loc.id].openPopup();
+                }, 500);
+            });
+
+            listContainer.appendChild(listItem);
+        });
+
+        // 4. Adjust map bounds to fit all markers on load
+        const bounds = L.latLngBounds(locations.map(loc => [loc.lat, loc.lng]));
+        map.fitBounds(bounds, { padding: [50, 50] });
+
+        // 5. Setup zoom listener for Tier 3 labels
+        const checkZoom = () => {
+            const mapContainer = document.getElementById('map');
+            // Show Tier 3 labels permanently if zoomed in closer than zoom level 14
+            if (map.getZoom() >= 14) {
+                mapContainer.classList.add('zoomed-in');
+            } else {
+                mapContainer.classList.remove('zoomed-in');
+            }
+        };
+        
+        // Check on zoom end, and also run it once on initial load
+        map.on('zoomend', checkZoom);
+        setTimeout(checkZoom, 100);
+
+        // Fix map resizing issues when changing device orientation
+        window.addEventListener('resize', () => {
+            map.invalidateSize();
+        });
+    </script>
+</body>
+</html>
