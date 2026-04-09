@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Macau Trip Map</title>
+    <meta name="description" content="A static Macau trip map with prioritized locations and a live sidebar for GitHub Pages.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <main class="app-shell">
+        <aside class="sidebar">
+            <header class="sidebar__header">
+                <div>
+                    <p class="eyebrow">Macau Trip</p>
+                    <h1>Trip map planner</h1>
+                    <p class="sidebar__subtitle">Static GitHub Pages map with prioritized places and bilingual location data.</p>
+                </div>
+                <div class="sidebar__stats">
+                    <div>
+                        <span class="stat__value" id="location-count">0</span>
+                        <span class="stat__label">Locations</span>
+                    </div>
+                    <div>
+                        <span class="stat__value">3</span>
+                        <span class="stat__label">Priority levels</span>
+                    </div>
+                </div>
+            </header>
+
+            <section class="sidebar__panel sidebar__panel--list" aria-label="Location list">
+                <div class="panel__heading">
+                    <h2>Places</h2>
+                    <span class="panel__hint">Click a place to focus the map</span>
+                </div>
+                <div class="location-list" id="location-list"></div>
+            </section>
+
+            <section class="sidebar__panel sidebar__panel--detail" aria-live="polite">
+                <div class="panel__heading">
+                    <h2>Selected place</h2>
+                    <span class="panel__hint">Shown when you click a marker or place</span>
+                </div>
+                <div id="selected-location" class="selected-location">
+                    <p class="selected-location__empty">Choose a location to see the full details.</p>
+                </div>
+            </section>
+
+            <footer class="priority-legend sidebar__panel">
+                <div class="panel__heading">
+                    <h2>Priority guide</h2>
+                    <span class="panel__hint">What each level means</span>
+                </div>
+                <div class="legend-grid">
+                    <div class="legend-item legend-item--1">
+                        <span class="legend-badge">1</span>
+                        <div>
+                            <strong>Must go</strong>
+                            <p>必去 / top priority</p>
+                        </div>
+                    </div>
+                    <div class="legend-item legend-item--2">
+                        <span class="legend-badge">2</span>
+                        <div>
+                            <strong>Will go</strong>
+                            <p>會去 / likely stop</p>
+                        </div>
+                    </div>
+                    <div class="legend-item legend-item--3">
+                        <span class="legend-badge">3</span>
+                        <div>
+                            <strong>Maybe go</strong>
+                            <p>可考慮 / optional</p>
+                        </div>
+                    </div>
+                </div>
+            </footer>
+        </aside>
+
+        <section class="map-panel" aria-label="Map of Macau trip locations">
+            <div id="map" class="map-panel__map"></div>
+        </section>
+    </main>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script type="module" src="app.js"></script>
+</body>
+</html>
